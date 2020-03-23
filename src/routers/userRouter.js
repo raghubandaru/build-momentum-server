@@ -1,8 +1,10 @@
 const cookieParser = require('cookie-parser')
 const express = require('express')
 const { verify } = require('jsonwebtoken')
+const multipart = require('connect-multiparty')
 
 const { auth } = require('../middlewares')
+const { cloudinary } = require('../utils')
 const { User } = require('../models')
 
 const router = express.Router()
@@ -84,6 +86,30 @@ router.post('/users/logout', auth, async (req, res) => {
   res.clearCookie('tid', { path: '/users/refresh_token' })
 
   res.status(201).send({ ok: true })
+})
+
+router.patch('/users/:id', auth, multipart(), async (req, res) => {
+  if (req.files) {
+    cloudinary.uploader.upload(
+      req.files.file.path,
+      {
+        upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET,
+        public_id: req.user.id
+      },
+      function(error, result) {
+        if (error) {
+          throw new Error('Unable to upload')
+        }
+        User.findByIdAndUpdate(
+          req.user.id,
+          { avatar: `${result.version}/${result.public_id}` },
+          { new: true }
+        ).then(user => {
+          res.status(201).send({ user })
+        })
+      }
+    )
+  }
 })
 
 module.exports = router
