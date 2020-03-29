@@ -2,16 +2,22 @@ const express = require('express')
 
 const auth = require('../middlewares/auth')
 
-const { Task } = require('../models')
+const { Goal, Task } = require('../models')
 
 const router = express.Router()
 
 router.post('/tasks', auth, async (req, res) => {
   try {
-    const task = new Task({ ...req.body, mission: req.query.mission })
-    const savedTask = await task.save()
+    const goal = await Goal.findOne({ _id: req.query.mission, isActive: true })
 
-    res.status(201).send({ task: savedTask })
+    if (goal) {
+      const task = new Task({ ...req.body, mission: req.query.mission })
+      const savedTask = await task.save()
+
+      res.status(201).send({ task: savedTask })
+    } else {
+      res.status(400).send({ error: 'You can only add tasks for active goal' })
+    }
   } catch (error) {
     res.status(400).send({ error })
   }
