@@ -8,6 +8,12 @@ const router = express.Router()
 
 router.post('/goals', auth, async (req, res) => {
   try {
+    const activeGoal = await Goal.findOne({ isActive: true })
+
+    if (activeGoal) {
+      return res.status(400).send({ error: 'Active goal already exists' })
+    }
+
     const goal = new Goal({
       ...req.body,
       author: req.user._id,
