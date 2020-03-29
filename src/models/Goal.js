@@ -20,8 +20,7 @@ const goalSchema = new Schema(
       type: Date
     },
     review: {
-      type: String,
-      default: 'No review available'
+      type: String
     }
   },
   {
