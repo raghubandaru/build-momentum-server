@@ -58,6 +58,28 @@ router.get('/goals', auth, async (req, res) => {
   }
 })
 
+router.patch('/goals/:id', auth, async (req, res) => {
+  try {
+    const activeGoal = await Goal.findOne({
+      _id: req.params.id,
+      isActive: true
+    })
+
+    if (activeGoal) {
+      const updatedGoal = await Goal.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true }
+      )
+      return res.status(200).send({ goal: updatedGoal })
+    } else {
+      return res.status(400).send({ error: 'Can only edit active goal' })
+    }
+  } catch (error) {
+    res.status(400).send({ error })
+  }
+})
+
 router.get('/goals/:id', auth, async (req, res) => {
   try {
     const goal = await Goal.findById(req.params.id)
