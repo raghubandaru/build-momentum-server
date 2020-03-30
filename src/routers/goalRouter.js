@@ -8,7 +8,10 @@ const router = express.Router()
 
 router.post('/goals', auth, async (req, res) => {
   try {
-    const activeGoal = await Goal.findOne({ isActive: true })
+    const activeGoal = await Goal.findOne({
+      isActive: true,
+      author: req.user._id
+    })
 
     if (activeGoal) {
       return res.status(400).send({ error: 'Active goal already exists' })
@@ -62,7 +65,8 @@ router.patch('/goals/:id', auth, async (req, res) => {
   try {
     const activeGoal = await Goal.findOne({
       _id: req.params.id,
-      isActive: true
+      isActive: true,
+      author: req.user._id
     })
 
     if (activeGoal) {
@@ -82,7 +86,10 @@ router.patch('/goals/:id', auth, async (req, res) => {
 
 router.get('/goals/:id', auth, async (req, res) => {
   try {
-    const goal = await Goal.findById(req.params.id)
+    const goal = await Goal.findOne({
+      _id: req.params.id,
+      author: req.user._id
+    })
 
     res.status(200).send({ goal })
   } catch (error) {
