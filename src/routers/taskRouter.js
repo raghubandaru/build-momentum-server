@@ -49,8 +49,31 @@ router.get('/tasks', auth, async (req, res) => {
 
 router.get('/tasks/:id', auth, async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id).cache({ key: req.user._id })
+    const task = await Task.findById(req.params.id)
+
     res.status(200).send({ task })
+  } catch (error) {
+    res.status(400).send({ error })
+  }
+})
+
+router.patch('/tasks/:id', auth, async (req, res) => {
+  try {
+    const { isActive } = await Goal.findById(req.query.mission)
+
+    if (isActive) {
+      const updatedTask = await Task.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        {
+          new: true
+        }
+      )
+
+      return res.status(200).send({ task: updatedTask })
+    } else {
+      res.status(400).send({ error: 'Not Found' })
+    }
   } catch (error) {
     res.status(400).send({ error })
   }
