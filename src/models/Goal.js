@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
 
+const Task = require('./Task')
+
 const Schema = mongoose.Schema
 
 const goalSchema = new Schema(
@@ -27,6 +29,15 @@ const goalSchema = new Schema(
     timestamps: true
   }
 )
+
+goalSchema.pre('remove', async function(next) {
+  const goal = this
+  console.log(goal)
+
+  await Task.deleteMany({ mission: goal._id })
+
+  next()
+})
 
 const Goal = mongoose.model('Goal', goalSchema)
 

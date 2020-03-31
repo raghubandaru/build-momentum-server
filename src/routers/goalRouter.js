@@ -97,4 +97,20 @@ router.get('/goals/:id', auth, async (req, res) => {
   }
 })
 
+router.delete('/goals/:id', auth, async (req, res) => {
+  try {
+    const goal = await Goal.findById(req.params.id)
+
+    if (goal.isActive) {
+      await goal.remove()
+
+      return res.status(200).send({ ok: true })
+    } else {
+      return res.status(400).send({ error: "Goal can't be deleted" })
+    }
+  } catch (error) {
+    res.status(400).send({ error })
+  }
+})
+
 module.exports = router
