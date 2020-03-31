@@ -106,4 +106,24 @@ router.patch('/tasks/:id', auth, async (req, res) => {
   }
 })
 
+router.delete('/tasks/:id', auth, async (req, res) => {
+  const activeGoal = await Goal.findOne({
+    _id: req.query.mission,
+    author: req.user._id,
+    isActive: true
+  })
+
+  try {
+    if (activeGoal) {
+      await Task.findByIdAndDelete(req.params.id)
+
+      return res.status(200).send({ ok: true })
+    } else {
+      res.status(400).send({ error: 'Invalid mission' })
+    }
+  } catch (error) {
+    res.status(400).send({ error })
+  }
+})
+
 module.exports = router
