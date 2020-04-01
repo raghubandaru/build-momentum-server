@@ -9,7 +9,7 @@ const { User } = require('../models')
 
 const router = express.Router()
 
-router.post('/users', async (req, res) => {
+router.post('/users',  async (req, res) => {
   try {
     const user = new User(req.body)
     const savedUser = await user.save()

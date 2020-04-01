@@ -1,12 +1,12 @@
 const express = require('express')
 const endOfISOWeek = require('date-fns/endOfISOWeek')
 
-const auth = require('../middlewares/auth')
+const { auth, clearCache } = require('../middlewares')
 const { Goal } = require('../models')
 
 const router = express.Router()
 
-router.post('/goals', auth, async (req, res) => {
+router.post('/goals', auth, clearCache, async (req, res) => {
   try {
     const activeGoal = await Goal.findOne({
       isActive: true,
@@ -47,8 +47,12 @@ router.get('/goals', auth, async (req, res) => {
       Goal.find(query)
         .sort('-createdAt')
         .skip((page - 1) * 3)
-        .limit(3),
-      Goal.find(query).countDocuments()
+        .limit(3).cache({
+      key: req.user._id
+    }),
+      Goal.find(query).countDocuments().cache({
+      key: req.user._id
+    })
     ])
 
     res.status(200).send({
@@ -61,7 +65,7 @@ router.get('/goals', auth, async (req, res) => {
   }
 })
 
-router.patch('/goals/:id', auth, async (req, res) => {
+router.patch('/goals/:id', auth, clearCache, async (req, res) => {
   try {
     const activeGoal = await Goal.findOne({
       _id: req.params.id,
@@ -89,6 +93,8 @@ router.get('/goals/:id', auth, async (req, res) => {
     const goal = await Goal.findOne({
       _id: req.params.id,
       author: req.user._id
+    }).cache({
+      key: req.user._id
     })
 
     res.status(200).send({ goal })
@@ -97,7 +103,7 @@ router.get('/goals/:id', auth, async (req, res) => {
   }
 })
 
-router.delete('/goals/:id', auth, async (req, res) => {
+router.delete('/goals/:id', auth, clearCache, async (req, res) => {
   try {
     const goal = await Goal.findById(req.params.id)
 

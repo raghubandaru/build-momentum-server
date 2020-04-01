@@ -1,12 +1,12 @@
 const express = require('express')
 
-const auth = require('../middlewares/auth')
+const { auth, clearCache } = require('../middlewares')
 
 const { Goal, Task } = require('../models')
 
 const router = express.Router()
 
-router.post('/tasks', auth, async (req, res) => {
+router.post('/tasks', auth, clearCache, async (req, res) => {
   try {
     const activeGoal = await Goal.findOne({
       _id: req.query.mission,
@@ -42,8 +42,12 @@ router.get('/tasks', auth, async (req, res) => {
         Task.find({ mission })
           .sort('-createdAt')
           .skip((page - 1) * 3)
-          .limit(3),
-        Task.find({ mission }).countDocuments()
+          .limit(3).cache({
+      key: req.user._id
+    }),
+        Task.find({ mission }).countDocuments().cache({
+      key: req.user._id
+    })
       ])
 
       res.status(200).send({
@@ -65,7 +69,9 @@ router.get('/tasks/:id', auth, async (req, res) => {
     _id: req.query.mission,
     author: req.user._id,
     isActive: true
-  })
+  }).cache({
+      key: req.user._id
+    })
 
   try {
     if (activeGoal) {
@@ -80,7 +86,7 @@ router.get('/tasks/:id', auth, async (req, res) => {
   }
 })
 
-router.patch('/tasks/:id', auth, async (req, res) => {
+router.patch('/tasks/:id', auth, clearCache, async (req, res) => {
   const activeGoal = await Goal.findOne({
     _id: req.query.mission,
     author: req.user._id,
@@ -106,7 +112,7 @@ router.patch('/tasks/:id', auth, async (req, res) => {
   }
 })
 
-router.delete('/tasks/:id', auth, async (req, res) => {
+router.delete('/tasks/:id', auth, clearCache, async (req, res) => {
   const activeGoal = await Goal.findOne({
     _id: req.query.mission,
     author: req.user._id,

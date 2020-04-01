@@ -1,4 +1,5 @@
 require('./db/mongoose')
+require('./utils/cache')
 const cors = require('cors')
 const express = require('express')
 

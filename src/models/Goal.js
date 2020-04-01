@@ -32,7 +32,6 @@ const goalSchema = new Schema(
 
 goalSchema.pre('remove', async function(next) {
   const goal = this
-  console.log(goal)
 
   await Task.deleteMany({ mission: goal._id })
 
