@@ -1,5 +1,5 @@
 const express = require('express')
-const endOfISOWeek = require('date-fns/endOfISOWeek')
+const moment = require('moment')
 
 const { auth, clearCache } = require('../middlewares')
 const { Goal } = require('../models')
@@ -20,7 +20,10 @@ router.post('/goals', auth, clearCache, async (req, res) => {
     const goal = new Goal({
       ...req.body,
       author: req.user._id,
-      endDate: endOfISOWeek(new Date())
+      endDate: moment()
+        .utcOffset('+0000')
+        .endOf('week')
+        .toISOString()
     })
     const savedGoal = await goal.save()
 
@@ -47,12 +50,15 @@ router.get('/goals', auth, async (req, res) => {
       Goal.find(query)
         .sort('-createdAt')
         .skip((page - 1) * 3)
-        .limit(3).cache({
-      key: req.user._id
-    }),
-      Goal.find(query).countDocuments().cache({
-      key: req.user._id
-    })
+        .limit(3)
+        .cache({
+          key: req.user._id
+        }),
+      Goal.find(query)
+        .countDocuments()
+        .cache({
+          key: req.user._id
+        })
     ])
 
     res.status(200).send({

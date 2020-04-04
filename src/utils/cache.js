@@ -51,4 +51,7 @@ function clearHash(hashKey) {
   return client.del(JSON.stringify(hashKey))
 }
 
-module.exports = clearHash
+module.exports = {
+  clearHash,
+  client
+}

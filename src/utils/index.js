@@ -1,4 +1,4 @@
 const cloudinary = require('./cloudinary')
-const clearHash = require('./cache')
+const { clearHash, client } = require('./cache')
 
-module.exports = { cloudinary, clearHash }
+module.exports = { cloudinary, clearHash, client }
