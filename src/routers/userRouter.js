@@ -41,9 +41,7 @@ router.post('/users/login', async (req, res) => {
   const { email, password } = req.body
 
   try {
-    const user = await User.findByCredentials(email, password).catch(error => {
-      res.status(401).send({ error: error.message })
-    })
+    const user = await User.findByCredentials(email, password)
 
     if (user) {
       const accessToken = user.generateAccessToken()
@@ -59,7 +57,11 @@ router.post('/users/login', async (req, res) => {
       res.status(400).send({ error })
     }
   } catch (error) {
-    res.status(400).send({ error })
+    if (error.message === 'Email or Password did not match') {
+      return res.status(401).send({ error: error.message })
+    } else {
+      res.status(400).send({ error })
+    }
   }
 })
 
