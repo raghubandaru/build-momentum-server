@@ -8,8 +8,7 @@ cron.schedule(
   () => {
     const cursor = Goal.find({ isActive: true }).cursor()
 
-    cursor.on('data', function(goal) {
-      console.log(goal)
+    cursor.on('data', function (goal) {
       goal.isActive = false
       goal.save().then(() => {
         // ideally mail people about their goal update
@@ -17,7 +16,7 @@ cron.schedule(
       })
     })
 
-    cursor.on('close', function() {
+    cursor.on('close', function () {
       // for now deleting the whole cache
       client.flushall()
     })

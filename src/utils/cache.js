@@ -8,13 +8,13 @@ client.hget = util.promisify(client.hget)
 
 const exec = mongoose.Query.prototype.exec
 
-mongoose.Query.prototype.cache = function(options = {}) {
+mongoose.Query.prototype.cache = function (options = {}) {
   this.useCache = true
   this.hashKey = JSON.stringify(options.key || '')
   return this
 }
 
-mongoose.Query.prototype.exec = async function() {
+mongoose.Query.prototype.exec = async function () {
   if (!this.useCache) {
     return exec.apply(this, arguments)
   }
@@ -29,7 +29,6 @@ mongoose.Query.prototype.exec = async function() {
 
   // make sure cached values return mongoose documents too
   if (cachedValue) {
-    console.log('serving from cache')
     const doc = JSON.parse(cachedValue)
 
     if (typeof doc === 'number') {
