@@ -1,8 +1,11 @@
+const bcrypt = require('bcryptjs')
 const cookieParser = require('cookie-parser')
+const crypto = require('crypto')
 const express = require('express')
 const { verify } = require('jsonwebtoken')
 const multipart = require('connect-multiparty')
 
+const { sendResetPasswordEmail } = require('../emails/resetPassword')
 const { auth } = require('../middlewares')
 const { cloudinary } = require('../utils')
 const { User } = require('../models')
@@ -10,7 +13,7 @@ const { User } = require('../models')
 const router = express.Router()
 
 router.post('/users', async (req, res) => {
-  const { email, password } = req.body
+  const { email } = req.body
 
   const isEmailExists = await User.findOne({ email })
 
@@ -25,7 +28,7 @@ router.post('/users', async (req, res) => {
     const savedUser = await user.save()
     const accessToken = savedUser.generateAccessToken()
 
-    res.cookie('tid', savedUser.generateRefreshToken(), {
+    res.cookie('bid', savedUser.generateRefreshToken(), {
       httpOnly: true,
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
       path: '/users/refresh_token'
@@ -46,7 +49,7 @@ router.post('/users/login', async (req, res) => {
     if (user) {
       const accessToken = user.generateAccessToken()
 
-      res.cookie('tid', user.generateRefreshToken(), {
+      res.cookie('bid', user.generateRefreshToken(), {
         httpOnly: true,
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
         path: '/users/refresh_token'
@@ -66,7 +69,7 @@ router.post('/users/login', async (req, res) => {
 })
 
 router.post('/users/refresh_token', cookieParser(), async (req, res) => {
-  const refreshToken = req.cookies.tid
+  const refreshToken = req.cookies.bid
 
   if (!refreshToken) {
     return res.status(400).send({ ok: false, accessToken: '' })
@@ -86,7 +89,7 @@ router.post('/users/refresh_token', cookieParser(), async (req, res) => {
     return res.status(400).send({ ok: false, accessToken: '' })
   }
 
-  res.cookie('tid', user.generateRefreshToken(), {
+  res.cookie('bid', user.generateRefreshToken(), {
     httpOnly: true,
     expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
     path: '/users/refresh_token'
@@ -97,12 +100,90 @@ router.post('/users/refresh_token', cookieParser(), async (req, res) => {
   return res.status(201).send({ ok: true, accessToken })
 })
 
+router.post('/users/reset_password/generate_token', async (req, res) => {
+  const { email } = req.body
+
+  try {
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      throw new Error('Account with the email address does not exist')
+    }
+
+    const randomString = crypto.randomBytes(20).toString('hex')
+    user.resetPasswordToken = await bcrypt.hash(randomString, 12)
+    user.resetPasswordExpiresIn = Date.now() + 3600000
+    await user.save()
+
+    const resetURL = `${process.env.ALLOWED_ORIGIN}/reset_password/${user._id}/${randomString}`
+    // send password reset email
+    sendResetPasswordEmail(user.email, resetURL, user.name)
+
+    res
+      .status(201)
+      .send({ message: '✔️ Please check your email for the following steps' })
+  } catch (error) {
+    res.status(400).send({ error: error.message })
+  }
+})
+
+router.post('/users/reset_password/change_password', async (req, res) => {
+  const { userId, password, confirmPassword } = req.body
+
+  if (password !== confirmPassword) {
+    throw new Error('Password and Confirm password do not match')
+  }
+
+  const user = await User.findById(userId)
+
+  if (!user) {
+    throw new Error('Invalid user')
+  }
+
+  user.password = password
+  user.resetPasswordToken = undefined
+  user.resetPasswordExpiresIn = undefined
+  await user.save()
+
+  res.status(201).send({ message: '✔️ Password reset success' })
+})
+
+router.get('/users/reset_password/:userId/:resetToken', async (req, res) => {
+  const { resetToken, userId } = req.params
+
+  try {
+    const user = await User.findById(userId)
+
+    if (!user) {
+      throw new Error('Invalid user')
+    }
+
+    if (user.resetPasswordToken && user.resetPasswordExpiresIn) {
+      if (user.resetPasswordExpiresIn.getTime() < Date.now()) {
+        throw new Error('❌ Token is invalid')
+      }
+
+      const isMatch = await bcrypt.compare(resetToken, user.resetPasswordToken)
+
+      if (!isMatch) {
+        throw new Error('❌ Token is invalid')
+      }
+
+      res.status(200).send({ message: '✔️ Token is valid' })
+    } else {
+      res.status(400).send({ error: '❌ Token is invalid' })
+    }
+  } catch (error) {
+    res.status(400).send({ error: error.message })
+  }
+})
+
 router.get('/users/me', auth, async (req, res) => {
   res.status(200).send({ user: req.user })
 })
 
 router.post('/users/logout', auth, async (req, res) => {
-  res.clearCookie('tid', { path: '/users/refresh_token' })
+  res.clearCookie('bid', { path: '/users/refresh_token' })
 
   res.status(201).send({ ok: true })
 })
