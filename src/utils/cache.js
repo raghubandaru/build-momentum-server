@@ -2,8 +2,9 @@ const mongoose = require('mongoose')
 const redis = require('redis')
 const util = require('util')
 
-const redisUrl = process.env.REDIS_URL
-const client = redis.createClient(redisUrl, { no_ready_check: true })
+const client = redis.createClient(process.env.REDISCLOUD_URL, {
+  no_ready_check: true
+})
 client.hget = util.promisify(client.hget)
 
 const exec = mongoose.Query.prototype.exec
