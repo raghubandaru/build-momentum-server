@@ -1,5 +1,4 @@
 require('./db/mongoose')
-require('./schedulers/resetGoalActive')
 require('./utils/cache')
 
 const cors = require('cors')
