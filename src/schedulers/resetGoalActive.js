@@ -2,6 +2,7 @@ const { Goal } = require('../models')
 const { client } = require('../utils')
 
 function resetGoalActive() {
+  console.log('running fn')
   const cursor = Goal.find({ isActive: true }).cursor()
 
   cursor.on('data', function (goal) {
