@@ -4,7 +4,7 @@ const { Goal } = require('../models')
 const { client } = require('../utils')
 
 cron.schedule(
-  '05 10 * * 7',
+  '05 20 * * 7',
   () => {
     const cursor = Goal.find({ isActive: true }).cursor()
 
