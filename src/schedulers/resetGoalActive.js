@@ -30,8 +30,6 @@ mongoose
 async function resetGoalActive() {
   const cursor = Goal.find({ isActive: true }).cursor()
 
-  console.log(cursor)
-
   cursor.on('data', function (goal) {
     console.log(goal)
     goal.isActive = false
