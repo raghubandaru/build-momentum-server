@@ -9,6 +9,10 @@ const { goalRouter, taskRouter, userRouter } = require('./routers')
 
 const app = express()
 
+app.get('/', (req, res) => {
+  return res.status(200).send('Hello Build Momentum Server')
+})
+
 app.use(
   cors({
     origin: process.env.ALLOWED_ORIGIN,
