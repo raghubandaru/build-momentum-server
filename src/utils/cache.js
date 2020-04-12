@@ -5,6 +5,7 @@ const util = require('util')
 const client = redis.createClient(process.env.REDISCLOUD_URL, {
   no_ready_check: true
 })
+
 client.hget = util.promisify(client.hget)
 
 const exec = mongoose.Query.prototype.exec
@@ -30,6 +31,7 @@ mongoose.Query.prototype.exec = async function () {
 
   // make sure cached values return mongoose documents too
   if (cachedValue) {
+    console.log('serving from cache')
     const doc = JSON.parse(cachedValue)
 
     if (typeof doc === 'number') {

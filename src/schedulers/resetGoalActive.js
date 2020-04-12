@@ -1,8 +1,36 @@
-const { Goal } = require('../models')
-const { client } = require('../utils')
+const mongoose = require('mongoose')
+const redis = require('redis')
 
-function resetGoalActive() {
-  console.log('running fn')
+const { Goal } = require('../models')
+
+console.log(process.env.MONGODB_URL)
+console.log(process.env.REDISCLOUD_URL)
+
+// Initialize redis client from env
+const client = redis.createClient(process.env.REDISCLOUD_URL, {
+  no_ready_check: true
+})
+
+const connectionURL = process.env.MONGODB_URL
+const options = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
+}
+
+// Initialize mongoose connection from env
+mongoose
+  .connect(connectionURL, options)
+  .then(() => {
+    resetGoalActive()
+      .then(() => console.log('Scheduled task done!'))
+      .catch(e => console.log(e))
+  })
+  .catch(() => console.log('Error connecting to Database'))
+
+// define the async task
+async function resetGoalActive() {
   const cursor = Goal.find({ isActive: true }).cursor()
 
   console.log(cursor)
@@ -21,5 +49,3 @@ function resetGoalActive() {
     client.flushall()
   })
 }
-
-resetGoalActive()
