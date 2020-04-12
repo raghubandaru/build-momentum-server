@@ -3,9 +3,6 @@ const redis = require('redis')
 
 const { Goal } = require('../models')
 
-console.log(process.env.MONGODB_URL)
-console.log(process.env.REDISCLOUD_URL)
-
 // Initialize redis client from env
 const client = redis.createClient(process.env.REDISCLOUD_URL, {
   no_ready_check: true
