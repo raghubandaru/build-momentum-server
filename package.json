@@ -23,7 +23,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.9.5",
     "redis": "^3.0.2",
-    "validator": "^13.0.0"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "env-cmd": "^10.1.0",
